@@ -1,0 +1,23 @@
+package build
+
+import mill._
+import mill.scalalib._
+
+object main extends ScalaModule { m =>
+  override def scalaVersion = "2.13.14"
+
+  override def scalacOptions = Seq(
+    "-language:reflectiveCalls",
+    "-deprecation",
+    "-feature",
+    "-Xcheckinit"
+  )
+
+  override def ivyDeps = Agg(
+    ivy"org.chipsalliance::chisel:7.0.0-M2"
+  )
+
+  override def scalacPluginIvyDeps = Agg(
+    ivy"org.chipsalliance:::chisel-plugin:7.0.0-M2"
+  )
+}
