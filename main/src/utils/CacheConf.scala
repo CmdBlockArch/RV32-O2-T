@@ -30,6 +30,6 @@ class CacheConf(val offsetW: Int = 4, val indexW: Int = 4, val wayN: Int = 2) {
   }
 
   def getOffset(pc: PC): UInt = getOffset(pc.full)
-  def getIndex(pc: PC): UInt = getOffset(pc.full)
-  def getTag(pc: PC): UInt = getOffset(pc.full)
+  def getIndex(pc: PC): UInt = getIndex(pc.full)
+  def getTag(pc: PC): UInt = getTag(pc.full)
 }

@@ -30,7 +30,7 @@ class CacheMeta extends Module {
   }
 
   readIO.data := (0 until wayN).map(i => {
-    val wayData = Wire(new WayDataType)
+    val wayData = Wire(new MetaType)
     wayData.valid := valid(readIO.index)(i)
     wayData.tag := tag.io.dout(i)
     wayData
@@ -39,7 +39,7 @@ class CacheMeta extends Module {
 }
 
 object CacheMeta {
-  class WayDataType extends Bundle {
+  class MetaType extends Bundle {
     val valid = Bool()
     val tag = UInt(tagW.W)
   }
@@ -47,12 +47,12 @@ object CacheMeta {
   class ReadIO extends Bundle {
     val en = Output(Bool())
     val index = Output(UInt(indexW.W))
-    val data = Input(Vec(wayN, new WayDataType))
+    val data = Input(Vec(wayN, new MetaType))
   }
 
   class WriteIO extends Bundle {
     val en = Output(Bool())
     val index = Output(UInt(indexW.W))
-    val data = Output(Vec(wayN, new WayDataType))
+    val data = Output(Vec(wayN, new MetaType))
   }
 }
