@@ -11,12 +11,7 @@ class PC extends Bundle {
 
 object PC {
   def apply() = new PC
-}
-
-object Addr {
-  def apply() = UInt(32.W)
-}
-
-object Word {
-  def apply() = UInt(32.W)
+  def regInit = {
+    RegInit(PC(), Config.resetVec)
+  }
 }
