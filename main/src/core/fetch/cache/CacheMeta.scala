@@ -3,7 +3,7 @@ package core.fetch.cache
 import chisel3._
 import utils._
 
-import Config.ICache._
+import conf.Conf.ICache._
 
 class CacheMeta extends Module {
   import CacheMeta._

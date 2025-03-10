@@ -1,7 +1,8 @@
-package utils
+package conf
 
 import chisel3._
 import chisel3.util._
+import utils._
 
 class CacheConf(val offsetW: Int = 4, val indexW: Int = 4, val wayN: Int = 2) {
   assert(wayN >= 1)

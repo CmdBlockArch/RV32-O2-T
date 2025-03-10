@@ -2,10 +2,11 @@ package core.fetch
 
 import chisel3._
 import chisel3.util._
-import utils._
 
-import Config.ICache._
+import utils._
 import cache.CacheMeta
+import conf.Conf.fetchWidth
+import conf.Conf.ICache._
 
 class Fetch0 extends Module {
   import Fetch0._
@@ -23,7 +24,7 @@ class Fetch0 extends Module {
   when (io.redirect) {
     pc := io.redirectPC
   } .elsewhen (io.ready) {
-    pc := pc.next(Config.fetchWidth)
+    pc := pc.next(fetchWidth)
   }
 
   metaRead.en := io.ready && !io.redirect
