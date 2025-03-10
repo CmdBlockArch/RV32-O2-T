@@ -6,13 +6,13 @@ import chisel3.util._
 class PC extends Bundle {
   val h = UInt(30.W)
   def full = Cat(h, 0.U(2.W))
-  def next(i: Int) = h + i.U
+  def next(i: Int) = (h + i.U).asTypeOf(PC())
 }
 
 object PC {
-  val resetPC = Config.resetVec(31, 2).asTypeOf(new PC)
-
   def apply(): PC = new PC
+  val resetPC = Config.resetVec(31, 2).asTypeOf(PC())
+
   def regInit = {
     RegInit(PC(), resetPC)
   }

@@ -7,5 +7,11 @@ object Config {
   val fastMul = true
   val resetVec = "h80000000".U(32.W)
 
-  val ICache = new CacheConf()
+  val fetchWidth = 2 // 一周期取指数
+
+  val ICache = new CacheConf(
+    offsetW = 4,
+    indexW = 4,
+    wayN = 2
+  )
 }

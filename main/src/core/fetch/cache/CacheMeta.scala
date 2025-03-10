@@ -8,30 +8,30 @@ import Config.ICache._
 class CacheMeta extends Module {
   import CacheMeta._
 
-  val readIO = IO(Flipped(new ReadIO))
-  val writeIO = IO(Flipped(new WriteIO))
+  val read = IO(Flipped(new ReadIO))
+  val write = IO(Flipped(new WriteIO))
 
   val valid = RegInit(VecInit(Seq.fill(setN)(
     VecInit(Seq.fill(wayN)(false.B))
   )))
   val tag = Module(new SRAM(setN, Vec(wayN, UInt(tagW.W))))
 
-  assert(!(readIO.en && writeIO.en)) // 读写互斥
+  assert(!(read.en && write.en)) // 读写互斥
 
-  tag.io.en := readIO.en || writeIO.en
-  tag.io.we := writeIO.en
-  tag.io.addr := Mux(writeIO.en, writeIO.index, readIO.index)
-  tag.io.din := writeIO.data.map(_.tag)
+  tag.io.en := read.en || write.en
+  tag.io.we := write.en
+  tag.io.addr := Mux(write.en, write.index, read.index)
+  tag.io.din := write.data.map(_.tag)
 
-  when (writeIO.en) {
+  when (write.en) {
     (0 until wayN).foreach(i => {
-      valid(writeIO.index)(i) := writeIO.data(i).valid
+      valid(write.index)(i) := write.data(i).valid
     })
   }
 
-  readIO.data := (0 until wayN).map(i => {
-    val wayData = Wire(new MetaType)
-    wayData.valid := valid(readIO.index)(i)
+  read.data := (0 until wayN).map(i => {
+    val wayData = Wire(new MetaBundle)
+    wayData.valid := valid(read.index)(i)
     wayData.tag := tag.io.dout(i)
     wayData
   })
@@ -39,7 +39,7 @@ class CacheMeta extends Module {
 }
 
 object CacheMeta {
-  class MetaType extends Bundle {
+  class MetaBundle extends Bundle {
     val valid = Bool()
     val tag = UInt(tagW.W)
   }
@@ -47,12 +47,12 @@ object CacheMeta {
   class ReadIO extends Bundle {
     val en = Output(Bool())
     val index = Output(UInt(indexW.W))
-    val data = Input(Vec(wayN, new MetaType))
+    val data = Input(Vec(wayN, new MetaBundle))
   }
 
   class WriteIO extends Bundle {
     val en = Output(Bool())
     val index = Output(UInt(indexW.W))
-    val data = Output(Vec(wayN, new MetaType))
+    val data = Output(Vec(wayN, new MetaBundle))
   }
 }

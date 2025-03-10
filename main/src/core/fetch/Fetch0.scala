@@ -10,7 +10,7 @@ import cache.CacheMeta
 class Fetch0 extends Module {
   import Fetch0._
 
-  val out = IO(new OutIO)
+  val out = IO(new OutBundle)
   val metaRead = IO(new CacheMeta.ReadIO)
   val io = IO(new Bundle {
     val redirect = Input(Bool())
@@ -22,6 +22,8 @@ class Fetch0 extends Module {
   val pc = PC.regInit
   when (io.redirect) {
     pc := io.redirectPC
+  } .elsewhen (io.ready) {
+    pc := pc.next(Config.fetchWidth)
   }
 
   metaRead.en := io.ready && !io.redirect
@@ -35,9 +37,8 @@ class Fetch0 extends Module {
 }
 
 object Fetch0 {
-  class OutIO extends Bundle {
-    val pc = Output(PC())
-
+  class OutBundle extends Bundle {
+    val pc = PC()
     val hit = Bool()
     val hitWay = UInt(wayW.W)
   }
