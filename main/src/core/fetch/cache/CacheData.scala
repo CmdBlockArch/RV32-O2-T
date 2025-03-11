@@ -19,7 +19,7 @@ class CacheData extends Module {
   read.data := DontCare
   for (i <- 0 until wayN) {
     data(i).io.en := (read.en || write.en) && way === i.U
-    data(i).io.we := (write.en && write.way === i.U)
+    data(i).io.we := write.en && write.way === i.U
     data(i).io.addr := index
     data(i).io.din := write.data
 

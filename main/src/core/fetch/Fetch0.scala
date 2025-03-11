@@ -32,7 +32,9 @@ class Fetch0 extends Module {
   out.pc := pc
 
   val tag = getTag(pc)
-  val hitVec = VecInit(metaRead.data.map(d => d.valid && d.tag === tag))
+  val hitVec = VecInit((0 until wayN).map(i => {
+    metaRead.valid(i) && metaRead.data(i).tag === tag
+  }))
   out.hit := hitVec.reduce(_ || _)
   out.hitWay := Mux1H(hitVec, (0 until wayN).map(_.U))
 }

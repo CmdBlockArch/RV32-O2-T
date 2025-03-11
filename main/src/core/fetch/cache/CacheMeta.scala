@@ -11,48 +11,46 @@ class CacheMeta extends Module {
   val read = IO(Flipped(new ReadIO))
   val write = IO(Flipped(new WriteIO))
 
+  assert(!(read.en && write.en)) // 读写互斥
+
   val valid = RegInit(VecInit(Seq.fill(setN)(
     VecInit(Seq.fill(wayN)(false.B))
   )))
-  val tag = Module(new SRAM(setN, Vec(wayN, UInt(tagW.W))))
+  val data = Seq.fill(wayN)(Module(new SRAM(setN, new MetaBundle)))
 
-  assert(!(read.en && write.en)) // 读写互斥
+  read.valid := valid(read.index)
+  for (i <- 0 until wayN) {
+    data(i).io.en := read.en || (write.en && write.way === i.U)
+    data(i).io.we := write.en && write.way === i.U
+    data(i).io.addr := Mux(write.en, write.index, read.index)
+    data(i).io.din := write.data
 
-  tag.io.en := read.en || write.en
-  tag.io.we := write.en
-  tag.io.addr := Mux(write.en, write.index, read.index)
-  tag.io.din := write.data.map(_.tag)
-
-  when (write.en) {
-    (0 until wayN).foreach(i => {
-      valid(write.index)(i) := write.data(i).valid
-    })
+    read.data(i) := data(i).io.dout
   }
 
-  read.data := (0 until wayN).map(i => {
-    val wayData = Wire(new MetaBundle)
-    wayData.valid := valid(read.index)(i)
-    wayData.tag := tag.io.dout(i)
-    wayData
-  })
+  when (write.en) {
+    valid(write.index)(write.way) := true.B
+  }
 
+  // TODO: Fence.I
 }
 
 object CacheMeta {
   class MetaBundle extends Bundle {
-    val valid = Bool()
     val tag = UInt(tagW.W)
   }
 
   class ReadIO extends Bundle {
     val en = Output(Bool())
     val index = Output(UInt(indexW.W))
+    val valid = Input(Vec(wayN, Bool()))
     val data = Input(Vec(wayN, new MetaBundle))
   }
 
   class WriteIO extends Bundle {
     val en = Output(Bool())
     val index = Output(UInt(indexW.W))
-    val data = Output(Vec(wayN, new MetaBundle))
+    val way = Output(UInt(wayW.W))
+    val data = Output(new MetaBundle)
   }
 }
