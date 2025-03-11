@@ -28,5 +28,6 @@ class Top extends Module {
   fetch.io.redirectPC := PC.resetPC
 
   val testOut = IO(new Fetch.OutBundle)
-  testOut := fetch.out
+  testOut := fetch.out.bits
+  fetch.out.ready := true.B
 }

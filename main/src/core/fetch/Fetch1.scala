@@ -9,7 +9,7 @@ import perip.{AxiReadArb, MemReader}
 
 class Fetch1 extends Module {
   val in = IO(Flipped(new Fetch0.OutBundle))
-  val out = IO(new Fetch.OutBundle)
+  val out = IO(Decoupled(new Fetch.OutBundle))
   val dataRead = IO(new CacheData.ReadIO)
   val metaWrite = IO(new CacheMeta.WriteIO)
   val dataWrite = IO(new CacheData.WriteIO)
@@ -28,11 +28,11 @@ class Fetch1 extends Module {
   val req = RegInit(false.B)
   when (io.flush) {
     valid := false.B
-  } .otherwise {
+  } .elsewhen (io.ready) {
     valid := true.B
     cur := in
   }
-  io.ready := !req && (!valid || cur.hit)
+  io.ready := !req && (!valid || out.fire)
 
   // 读ICache
   val tag = getTag(cur.pc)
@@ -44,11 +44,12 @@ class Fetch1 extends Module {
 
   // 输出指令读取结果
   assert(fetchWidth == 2)
-  out.pc := cur.pc
-  out.inst(0).valid := valid && cur.hit
-  out.inst(0).inst := dataRead.data(offset)
-  out.inst(1).valid := valid && cur.hit && offset =/= (blockN - 1).U
-  out.inst(1).inst := dataRead.data(offset + 1.U)
+  out.valid := valid && cur.hit
+  out.bits.pc := cur.pc
+  out.bits.inst(0).valid := out.valid
+  out.bits.inst(0).inst := dataRead.data(offset)
+  out.bits.inst(1).valid := out.valid && offset =/= (blockN - 1).U
+  out.bits.inst(1).inst := dataRead.data(offset + 1.U)
 
   // 二路组相联的PLRU
   assert(wayN == 2)

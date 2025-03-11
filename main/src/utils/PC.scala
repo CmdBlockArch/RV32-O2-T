@@ -9,6 +9,7 @@ class PC extends Bundle {
   val h = UInt(30.W)
   def full = Cat(h, 0.U(2.W))
   def next(i: Int) = (h + i.U).asTypeOf(PC())
+  def next(i: UInt) = (h + i).asTypeOf(PC())
 }
 
 object PC {

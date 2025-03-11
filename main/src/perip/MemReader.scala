@@ -21,7 +21,7 @@ class MemReader(burstN: Int) extends Module {
   val data = Reg(Vec(burstN, UInt(32.W)))
 
   arbRead.setBurst(burstN)
-  arbRead.req := io.req
+  arbRead.req := io.req && !resp
   arbRead.addr := io.addr
 
   val offset = if (single) 0.U

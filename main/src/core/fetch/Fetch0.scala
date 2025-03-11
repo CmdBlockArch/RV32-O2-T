@@ -21,10 +21,15 @@ class Fetch0 extends Module {
   })
 
   val pc = PC.regInit
+
+  assert(fetchWidth == 2)
+  val offset = getOffset(pc)
+  val pcIncr = Mux(offset === (blockN - 1).U, 1.U, 2.U)
+
   when (io.redirect) {
     pc := io.redirectPC
   } .elsewhen (io.ready) {
-    pc := pc.next(fetchWidth)
+    pc := pc.next(pcIncr)
   }
 
   metaRead.en := io.ready && !io.redirect

@@ -1,13 +1,14 @@
 package core.fetch
 
 import chisel3._
+import chisel3.util._
 import conf.Conf.fetchWidth
 import core.fetch.cache.{CacheData, CacheMeta}
 import perip.AxiReadArb
 import utils._
 
 class Fetch extends Module {
-  val out = IO(new Fetch.OutBundle)
+  val out = IO(Decoupled(new Fetch.OutBundle))
   val arbRead = IO(new AxiReadArb.ReadIO)
   val io = IO(new Bundle {
     val redirect = Input(Bool())
@@ -24,7 +25,7 @@ class Fetch extends Module {
   fetch0.io.redirect := io.redirect
   fetch0.io.redirectPC := io.redirectPC
 
-  out := fetch1.out
+  out :<>= fetch1.out
   cacheData.read :<>= fetch1.dataRead
   cacheMeta.write :<>= fetch1.metaWrite
   cacheData.write :<>= fetch1.dataWrite
