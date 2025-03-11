@@ -2,7 +2,8 @@ package core
 
 import chisel3._
 import utils._
-import conf.Conf.debug
+import conf.Conf.{debug, decodeWidth}
+import core.decode.Decode
 import core.fetch.Fetch
 import perip.{AxiReadArb, AxiReadIO, AxiWriteArb, AxiWriteIO, SimMemRead, SimMemWrite}
 
@@ -23,11 +24,16 @@ class Top extends Module {
   }
 
   val fetch = Module(new Fetch)
+  val decode = Module(new Decode)
+
   axiReadArb.master(0) :<>= fetch.arbRead
+  decode.in :<>= fetch.out
   fetch.io.redirect := false.B
   fetch.io.redirectPC := PC.resetPC
 
-  val testOut = IO(new Fetch.OutBundle)
-  testOut := fetch.out.bits
-  fetch.out.ready := true.B
+  decode.flush := false.B
+  decode.out.ready := true.B
+
+  val testOut = IO(new Decode.OutBundle)
+  testOut := decode.out.bits
 }

@@ -46,10 +46,10 @@ class Fetch1 extends Module {
   assert(fetchWidth == 2)
   out.valid := valid && cur.hit
   out.bits.pc := cur.pc
-  out.bits.inst(0).valid := out.valid
-  out.bits.inst(0).inst := dataRead.data(offset)
-  out.bits.inst(1).valid := out.valid && offset =/= (blockN - 1).U
-  out.bits.inst(1).inst := dataRead.data(offset + 1.U)
+  out.bits.valid(0) := true.B
+  out.bits.inst(0) := dataRead.data(offset)
+  out.bits.valid(1) := offset =/= (blockN - 1).U
+  out.bits.inst(1) := dataRead.data(offset + 1.U)
 
   // 二路组相联的PLRU
   assert(wayN == 2)

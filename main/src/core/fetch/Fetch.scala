@@ -35,13 +35,9 @@ class Fetch extends Module {
 }
 
 object Fetch {
-  class InstBundle extends Bundle {
-    val valid = Bool()
-    val inst = UInt(32.W)
-  }
-
   class OutBundle extends Bundle {
     val pc = PC()
-    val inst = Vec(fetchWidth, new InstBundle)
+    val valid = Vec(fetchWidth, Bool())
+    val inst = Vec(fetchWidth, UInt(32.W))
   }
 }
