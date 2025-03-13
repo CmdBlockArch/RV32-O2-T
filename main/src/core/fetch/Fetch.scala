@@ -13,6 +13,8 @@ class Fetch extends Module {
   val io = IO(new Bundle {
     val redirect = Input(Bool())
     val redirectPC = Input(PC())
+
+    val fenceI = Input(Bool())
   })
 
   val fetch0 = Module(new Fetch0)
@@ -32,6 +34,8 @@ class Fetch extends Module {
   arbRead :<>= fetch1.arbRead
   fetch0.io.ready := fetch1.io.ready
   fetch1.io.flush := io.redirect
+
+  cacheMeta.flush := io.fenceI
 }
 
 object Fetch {

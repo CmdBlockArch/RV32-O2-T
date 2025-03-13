@@ -10,6 +10,7 @@ class CacheMeta extends Module {
 
   val read = IO(Flipped(new ReadIO))
   val write = IO(Flipped(new WriteIO))
+  val flush = IO(Input(Bool()))
 
   assert(!(read.en && write.en)) // 读写互斥
 
@@ -32,7 +33,9 @@ class CacheMeta extends Module {
     valid(write.index)(write.way) := true.B
   }
 
-  // TODO: Fence.I
+  when (flush) {
+    valid := 0.U.asTypeOf(valid)
+  }
 }
 
 object CacheMeta {

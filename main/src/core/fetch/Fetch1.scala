@@ -32,7 +32,7 @@ class Fetch1 extends Module {
     valid := true.B
     cur := in
   }
-  io.ready := !req && (!valid || out.fire)
+  io.ready := (!req && !valid) || out.fire
 
   // 读ICache
   val tag = getTag(cur.pc)
@@ -72,7 +72,9 @@ class Fetch1 extends Module {
       cur.hitWay := evictWay
     }
   }
-  metaWrite.en := memReader.io.resp
+
+  // fence.i发生后会冲刷流水线。在冲刷前开始的请求不能写入元数据
+  metaWrite.en := valid && memReader.io.resp
   metaWrite.index := index
   metaWrite.way := evictWay
   metaWrite.data.tag := tag

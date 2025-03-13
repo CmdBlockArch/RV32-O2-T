@@ -16,9 +16,9 @@ abstract class PiplineModule[TI <: Data, TO <: Data]
   val outCond = WireDefault(true.B)
 
   in.ready := !valid || (out.ready && outCond)
-  out.valid := valid && !flush && outCond
+  out.valid := valid && outCond
   when (in.fire) {
-    valid := true.B
+    valid := !flush
     cur := in.bits
   } .elsewhen (out.fire || flush) {
     valid := false.B

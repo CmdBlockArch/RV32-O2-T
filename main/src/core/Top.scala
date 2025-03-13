@@ -30,6 +30,7 @@ class Top extends Module {
   decode.in :<>= fetch.out
   fetch.io.redirect := false.B
   fetch.io.redirectPC := PC.resetPC
+  fetch.io.fenceI := false.B
 
   decode.flush := false.B
   decode.out.ready := true.B
