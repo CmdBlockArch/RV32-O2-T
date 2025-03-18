@@ -29,6 +29,9 @@ class InstDecoder extends Module {
   val immJ = Cat(Fill(12, inst(31)), inst(19, 12), inst(20), inst(30, 21), 0.U(1.W))
   val immZ = Cat(0.U(27.W), inst(19, 15))
   res.imm := Mux1H(cs(ImmSelField), Seq(immI, immS, immB, immU, immJ, immZ))
+
+  // 异常
+  res.err := cs(EbreakField)
 }
 
 object InstDecoder {
@@ -40,5 +43,6 @@ object InstDecoder {
 
   class DecodeBundle extends Bundle {
     val imm = UInt(32.W)
+    val err = Bool()
   }
 }

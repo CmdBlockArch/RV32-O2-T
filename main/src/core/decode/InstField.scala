@@ -89,12 +89,20 @@ object ImmSelField extends DecodeField[InstPattern, UInt] {
   }
 }
 
+object EbreakField extends BoolDecodeField[InstPattern] {
+  override def name = "ebreak" // 是否为EBREAK操作
+  override def genTable(op: InstPattern): BitPat = {
+    if (InstPattern.ebreak.bitPat.cover(op.inst)) y else n
+  }
+}
+
 object InstField {
   val fields = Seq(
     Rs1EnField,
     Rs2EnField,
     RdEnField,
-    ImmSelField
+    ImmSelField,
+    EbreakField,
   )
 }
 

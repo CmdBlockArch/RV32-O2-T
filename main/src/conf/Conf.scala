@@ -11,6 +11,7 @@ object Conf {
   val fetchWidth = 2
   val decodeWidth = 2
   val renameWidth = 2
+  val dispatchWidth = 2
 
   val ICache = new CacheConf(
     offsetW = 4,
@@ -20,4 +21,7 @@ object Conf {
 
   val prfN = 64 // 物理寄存器数量
   val prfW = log2Ceil(prfN) // 物理寄存器地址宽度
+
+  val robN = 64 // ROB项数
+  val robW = log2Ceil(robN) // ROB表项地址宽度
 }

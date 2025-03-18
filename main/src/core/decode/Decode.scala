@@ -1,7 +1,6 @@
 package core.decode
 
 import chisel3._
-import chisel3.util._
 import conf.Conf.{decodeWidth, fetchWidth}
 import core.fetch.Fetch
 import utils._

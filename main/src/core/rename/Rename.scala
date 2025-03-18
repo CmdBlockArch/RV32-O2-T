@@ -11,6 +11,9 @@ class Rename extends PiplineModule(new Decode.OutBundle, new Rename.OutBundle) {
   assert(decodeWidth == renameWidth)
   res.valid := cur.valid
   res.inst := cur.inst
+  for (i <- 0 until renameWidth) {
+    res.gpr(i).ard := cur.gpr(i).rd
+  }
 
   // Register Alias Table
   val rat = RegInit(VecInit(Seq.fill(32)(0.U(prfW.W))))
@@ -36,8 +39,6 @@ class Rename extends PiplineModule(new Decode.OutBundle, new Rename.OutBundle) {
 
     res.gpr(i).rs1 := ratBefore(cur.gpr(i).rs1)
     res.gpr(i).rs2 := ratBefore(cur.gpr(i).rs2)
-    // 0寄存器的映射始终是恒0的0号物理寄存器，释放时不会有任何作用
-    res.gpr(i).free := ratBefore(cur.gpr(i).rd)
 
     when (needAlloc(i)) { // 若需要分配物理寄存器
       res.gpr(i).rd := freeList(deqBefore)
@@ -52,7 +53,7 @@ class Rename extends PiplineModule(new Decode.OutBundle, new Rename.OutBundle) {
   }
 
   // 更新重命名数据结构
-  when (update && outCond) {
+  when (update) {
     rat := ratBefore
     deqPtr := deqPtr + allocCnt
     count := count - allocCnt
@@ -67,7 +68,7 @@ object Rename {
     val rs1 = UInt(prfW.W)
     val rs2 = UInt(prfW.W)
     val rd = UInt(prfW.W)
-    val free = UInt(prfW.W) // rd的旧映射，需要在提交时释放
+    val ard = UInt(5.W)
   }
 
   class OutBundle extends Bundle {
