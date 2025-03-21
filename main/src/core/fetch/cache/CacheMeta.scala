@@ -12,8 +12,6 @@ class CacheMeta extends Module {
   val write = IO(Flipped(new WriteIO))
   val flush = IO(Input(Bool()))
 
-  assert(!(read.en && write.en)) // 读写互斥
-
   val valid = RegInit(VecInit(Seq.fill(setN)(
     VecInit(Seq.fill(wayN)(false.B))
   )))

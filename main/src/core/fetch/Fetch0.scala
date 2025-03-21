@@ -32,7 +32,8 @@ class Fetch0 extends Module {
     pc := pc.next(pcIncr)
   }
 
-  metaRead.en := io.ready && !io.redirect
+  // 除写入周期外，始终读
+  metaRead.en := true.B
   metaRead.index := getIndex(pc)
   out.pc := pc
 

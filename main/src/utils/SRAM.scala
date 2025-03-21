@@ -2,6 +2,7 @@ package utils
 
 import chisel3._
 import chisel3.util._
+import conf.Conf.debug
 
 class SRAM[T <: Data](val size: Int, val dataType: T) extends Module {
   val addrW = log2Ceil(size)
@@ -25,5 +26,9 @@ class SRAM[T <: Data](val size: Int, val dataType: T) extends Module {
     mem(io.addr) := io.din
   }
 
-  io.dout := Mux(io.en && !io.we, mem(io.addr), 0.U.asTypeOf(dataType))
+  if (debug) {
+    io.dout := Mux(io.en && !io.we, mem(io.addr), 0.U.asTypeOf(dataType))
+  } else {
+    io.dout := mem(io.addr)
+  }
 }
