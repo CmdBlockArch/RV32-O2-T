@@ -31,6 +31,9 @@ class ReorderBuffer extends Module {
   when (dispatch.valid(1)) {
     rob(enqPtr + 1.U) := dispatch.entry(1)
   }
+
+  // --------- commit ----------
+  // TODO: 提交逻辑
 }
 
 object ReorderBuffer {

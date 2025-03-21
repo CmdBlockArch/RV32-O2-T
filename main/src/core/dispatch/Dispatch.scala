@@ -37,4 +37,7 @@ class Dispatch extends Module {
     robAlloc.entry(i).wb := cur.inst(i).err // 异常指令可以直接提交
   }
 
+  // ---------- 写发射队列 ----------
+  // TODO: 产生指令操作数的就绪信号，写入发射队列
+
 }
