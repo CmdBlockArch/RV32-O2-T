@@ -29,7 +29,7 @@ class Rename extends PiplineModule(new Decode.OutBundle, new Rename.OutBundle) {
     .map(i => cur.valid(i) && cur.gpr(i).rd.orR)) // 需要分配物理寄存器的指令
   val allocCnt = Wire(UInt(prfW.W)) // 需要分配的物理寄存器数量
   allocCnt := needAlloc.count(_.asBool)
-  setOutCond(count >= allocCnt) // 阻塞，直到有足够的空闲寄存器
+  setUpdateCond(count >= allocCnt) // 阻塞，直到有足够的空闲寄存器
 
   var ratBefore = WireDefault(rat)
   var deqBefore = WireDefault(deqPtr)
