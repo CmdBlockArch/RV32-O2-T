@@ -30,11 +30,11 @@ class InstDecoder extends Module {
   val immZ = Cat(0.U(27.W), inst(19, 15))
   res.imm := Mux1H(cs(ImmSelField), Seq(immI, immS, immB, immU, immJ, immZ))
 
-  // 执行单元选择
-  res.exu := cs(ExuSelField)
-
   // 异常
   res.err := cs(EbreakField)
+
+  // 执行单元选择
+  res.exu := Mux(res.err, 0.U, cs(ExuSelField))
 
   // 功能码
   res.func := inst(14, 12)

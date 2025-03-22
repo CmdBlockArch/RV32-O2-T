@@ -1,12 +1,12 @@
 package core.wb
 
 import chisel3._
-import conf.Conf.{prfN, prfW, wbWidth}
+import conf.Conf.{prfN, prfW, dispatchWidth, wbWidth}
 
 class PhyRegFile extends Module {
   import PhyRegFile._
 
-  val probe = IO(Vec(2, Flipped(new ProbeIO)))
+  val probe = IO(Vec(dispatchWidth * 2, Flipped(new ProbeIO)))
   val read = IO(Vec(wbWidth * 2, Flipped(new ReadIO)))
   val write = IO(Vec(wbWidth, Flipped(new WriteIO)))
 
