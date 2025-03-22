@@ -2,10 +2,10 @@ package core.issue
 
 import chisel3._
 import chisel3.util._
-import conf.Conf.{prfW, robW, rsCntW, wbWidth}
+import conf.Conf.{prfW, rsCntW, wbWidth}
 import core.wb.PhyRegFile
 
-class Issue[T <: Data](rsSize: Int, payload: => T) extends Module {
+class Issue[T <: Data](rsSize: Int, payload: => T, fifo: Boolean = false) extends Module {
   import Issue._
 
   val dispatch = IO(Flipped(new DispatchIO(payload)))
@@ -16,7 +16,11 @@ class Issue[T <: Data](rsSize: Int, payload: => T) extends Module {
     val flush = Input(Bool())
   })
 
-  val rs = Module(new ResvStation(rsSize, payload))
+  val rs = if (fifo) {
+    Module(new FifoResvStation(rsSize, payload))
+  } else {
+    Module(new OooResvStation(rsSize, payload))
+  }
   val src = Module(new PrfRead(payload))
 
   rs.dispatch :<>= dispatch
