@@ -3,6 +3,7 @@ package core.issue
 import chisel3._
 import chisel3.util._
 import conf.Conf.{prfW, robW, rsCntW, wbWidth}
+import core.wb.PhyRegFile
 
 class Issue[T <: Data](rsSize: Int, payload: => T) extends Module {
   import Issue._
@@ -10,16 +11,22 @@ class Issue[T <: Data](rsSize: Int, payload: => T) extends Module {
   val dispatch = IO(Flipped(new DispatchIO(payload)))
   val out = IO(Decoupled(new OutBundle(payload)))
   val wbRd = IO(Input(Vec(wbWidth, UInt(prfW.W))))
+  val prfRead = IO(Vec(2, new PhyRegFile.ReadIO))
   val io = IO(new Bundle {
     val flush = Input(Bool())
   })
 
   val rs = Module(new ResvStation(rsSize, payload))
+  val src = Module(new PrfRead(payload))
+
   rs.dispatch :<>= dispatch
+  src.in :<>= rs.out
   rs.wbRd := wbRd
   rs.io.flush := io.flush
 
-  // TODO: 读寄存器堆
+  prfRead :<>= src.prfRead
+  out :<>= src.out
+  src.flush := io.flush
 }
 
 object Issue {
