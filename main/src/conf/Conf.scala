@@ -13,7 +13,7 @@ object Conf {
   val renameWidth = 2
   val dispatchWidth = 2
 
-  val wbWidth = 4
+  val wbWidth = 5
 
   val ICache = new CacheConf(
     offsetW = 4,

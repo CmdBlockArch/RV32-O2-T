@@ -30,8 +30,25 @@ class InstDecoder extends Module {
   val immZ = Cat(0.U(27.W), inst(19, 15))
   res.imm := Mux1H(cs(ImmSelField), Seq(immI, immS, immB, immU, immJ, immZ))
 
+  // 执行单元选择
+  res.exu := cs(ExuSelField)
+
   // 异常
   res.err := cs(EbreakField)
+
+  // 功能码
+  res.func := inst(14, 12)
+
+  // ALU
+  res.aluUseImm := !inst(5)
+  res.aluSign := cs(AluSignEnField) && inst(30)
+
+  // BRU
+  res.bruRdSel := cs(BruRdSelField)
+  res.bruJalr := cs(JalrField)
+
+  // LSU
+  res.lsuMem := cs(MemField)
 }
 
 object InstDecoder {
@@ -43,6 +60,16 @@ object InstDecoder {
 
   class DecodeBundle extends Bundle {
     val imm = UInt(32.W)
+    val func = UInt(3.W)
     val err = Bool()
+    val exu = UInt(4.W)
+
+    val aluUseImm = Bool()
+    val aluSign = Bool()
+
+    val bruRdSel = UInt(2.W)
+    val bruJalr = Bool()
+
+    val lsuMem = UInt(4.W)
   }
 }

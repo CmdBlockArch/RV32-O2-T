@@ -3,14 +3,23 @@ package core.dispatch
 import chisel3._
 import chisel3.util.Decoupled
 import conf.Conf.dispatchWidth
+import core.issue.Issue
 import core.rename.Rename
+import core.wb.PhyRegFile
 
 class Dispatch extends Module {
   val in = IO(Flipped(Decoupled(new Rename.OutBundle)))
   val robAlloc = IO(new ReorderBuffer.DispatchIO)
+  val prfProbe = IO(new PhyRegFile.ProbeIO)
   val io = IO(new Bundle {
     val flush = Input(Bool())
   })
+
+  val alu0 = IO(new Issue.DispatchIO(new AluBundle))
+  val alu1 = IO(new Issue.DispatchIO(new AluBundle))
+  val bru = IO(new Issue.DispatchIO(new BruBundle))
+  val mdu = IO(new Issue.DispatchIO(new MduBundle))
+  val lsu = IO(new Issue.DispatchIO(new LsuBundle))
 
   val valid = RegInit(false.B)
   val cur = Reg(new Rename.OutBundle)

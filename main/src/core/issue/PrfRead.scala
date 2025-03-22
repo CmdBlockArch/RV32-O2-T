@@ -12,6 +12,8 @@ class PrfRead[T <: Data](payload: => T)
 
   res.inst := cur.inst
 
+  prfRead(0).en := valid
+  prfRead(1).en := valid
   prfRead(0).rs := cur.rs1
   prfRead(1).rs := cur.rs2
   res.src1 := prfRead(0).src
