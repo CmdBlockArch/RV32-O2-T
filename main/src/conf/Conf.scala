@@ -28,9 +28,9 @@ object Conf {
   val robW = log2Ceil(robN) // ROB表项地址宽度
 
   val aluRsN = 8 // ALU保留站项数
-  val abuRsN = 8 // ALU+BRU保留站项数
+  val bruRsN = 4 // ALU+BRU保留站项数
   val mduRsN = 4 // 乘除法保留站项数
-  val memRsN = 4 // 内存保留站项数
+  val lsuRsN = 4 // 内存保留站项数
   val rsCntW = log2Ceil( // 保留站项数宽度
-    Seq(aluRsN, abuRsN, mduRsN, memRsN).max + 1)
+    Seq(aluRsN, bruRsN, mduRsN, lsuRsN).max + 1)
 }
