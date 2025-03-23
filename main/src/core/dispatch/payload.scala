@@ -2,6 +2,7 @@ package core.dispatch
 
 import chisel3._
 import conf.Conf.{prfW, robW}
+import utils._
 
 trait ExuBundle extends Bundle {
   val robIdx = UInt(robW.W)
@@ -18,6 +19,7 @@ class AluBundle extends ExuBundle {
 
 class BruBundle extends ExuBundle {
   val imm = UInt(32.W)
+  val pc = PC()
   val func = UInt(3.W)
   val rdSel = UInt(2.W)
   val jalr = Bool()

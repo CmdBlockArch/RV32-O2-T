@@ -91,6 +91,7 @@ class Dispatch extends Module {
     bruEntry(i).inst.robIdx := robAlloc.enqPtr + i.U
 
     bruEntry(i).inst.imm := cur.inst(i).imm
+    bruEntry(i).inst.pc := cur.pc.next(i)
     bruEntry(i).inst.func := cur.inst(i).func
     bruEntry(i).inst.rdSel := cur.inst(i).bruRdSel
     bruEntry(i).inst.jalr := cur.inst(i).bruJalr
