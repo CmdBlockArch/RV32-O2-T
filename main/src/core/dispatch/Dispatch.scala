@@ -22,7 +22,7 @@ class Dispatch extends Module {
 
   val valid = RegInit(false.B)
   val cur = Reg(new Rename.OutBundle)
-  val ready = WireDefault(false.B) // TODO: cond
+  val ready = WireDefault(false.B)
   val update = valid && ready
 
   in.ready := !valid || ready
@@ -35,7 +35,7 @@ class Dispatch extends Module {
 
   // ---------- 分配ROB表项 ----------
   val dispatchCnt = cur.valid.count(_.asBool)
-  val robCanAlloc = robAlloc.freeCnt >= dispatchCnt
+  val robReady = robAlloc.freeCnt >= dispatchCnt
 
   robAlloc.valid := VecInit(cur.valid.map(update && _))
   for (i <- 0 until dispatchWidth) {
@@ -134,7 +134,7 @@ class Dispatch extends Module {
   // ---------- 写保留站 ----------
   assert(dispatchWidth == 2)
   val aluSel = alu(1).freeCnt > alu(0).freeCnt
-  val rsCanAlloc = alu(aluSel).freeCnt >= aluReq.count(_.asBool) &&
+  val rsReady = alu(aluSel).freeCnt >= aluReq.count(_.asBool) &&
     bru.freeCnt >= bruReq.count(_.asBool) &&
     mdu.freeCnt >= mduReq.count(_.asBool) &&
     lsu.freeCnt >= lsuReq.count(_.asBool)
@@ -151,5 +151,5 @@ class Dispatch extends Module {
   lsu.entry := lsuEntry
 
   // ---------- 分派条件 ----------
-  ready := robCanAlloc && rsCanAlloc
+  ready := robReady && rsReady
 }

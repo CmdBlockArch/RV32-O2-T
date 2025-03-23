@@ -41,10 +41,6 @@ class OooResvStation[T <: Data](entryN: Int, payload: => T)
   }
 
   // ---------- 写入 ----------
-  // 保留站空位数量
-  dispatch.freeCnt := valid.count(!_.asBool) +& out.fire
-  assert(dispatch.freeCnt +& dispatch.valid.count(_.asBool) <= entryN.U)
-
   // 输出输入后，valid的状态
   val validNext = WireDefault(validShift)
 

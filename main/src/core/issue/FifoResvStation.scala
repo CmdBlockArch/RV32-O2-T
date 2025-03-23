@@ -7,7 +7,6 @@ class FifoResvStation[T <: Data](entryN: Int, payload: => T)
 
   val enqPtr = RegInit(0.U(entryW.W))
   val deqPtr = RegInit(0.U(entryW.W))
-  val freeCnt = RegInit(entryN.U((entryW + 1).W))
 
   // ---------- 输出 ----------
   out.valid := freeCnt =/= entryN.U && rs(deqPtr).ready
@@ -27,20 +26,13 @@ class FifoResvStation[T <: Data](entryN: Int, payload: => T)
   rs := rsWaken
 
   // ---------- 写入 ----------
-  // 保留站空位数量
-  dispatch.freeCnt := freeCnt +& out.fire
-  assert(dispatch.freeCnt +& dispatch.valid.count(_.asBool) <= entryN.U)
-
   when (inValid(0)) { rs(enqPtr) := inEntry(0) }
   when (inValid(1)) { rs(enqPtr + 1.U) := inEntry(1) }
 
-  val enqCnt = dispatch.valid.count(_.asBool)
-  enqPtr := enqPtr + enqCnt
+  enqPtr := enqPtr + dispatchCnt
 
-  // ---------- 空位和冲刷 ----------
-  freeCnt := (freeCnt + enqCnt) - out.fire
+  // ---------- 冲刷 ----------
   when (io.flush) {
-    freeCnt := entryN.U
     enqPtr := 0.U
     deqPtr := 0.U
   }

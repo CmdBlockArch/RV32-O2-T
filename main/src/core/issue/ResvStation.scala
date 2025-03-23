@@ -7,6 +7,7 @@ import conf.Conf.{prfW, wbWidth}
 class ResvStation[T <: Data](entryN: Int, payload: => T) extends Module {
   import Issue._
   val entryW = log2Ceil(entryN)
+  val cntW = log2Ceil(entryN + 1)
   val instBundle = () => new InstBundle(payload)
   val dispatchBundle = () => new DispatchBundle(payload)
   val dispatchIO = () => new DispatchIO(payload)
@@ -30,6 +31,16 @@ class ResvStation[T <: Data](entryN: Int, payload: => T) extends Module {
 
   // 保留站表项
   val rs = Reg(Vec(entryN, dispatchBundle()))
+
+  // 空位数量
+  val freeCnt = RegInit(entryN.U(cntW.W))
+  val dispatchCnt = dispatch.valid.count(_.asBool)
+  assert(freeCnt +& dispatchCnt <= entryN.U) // 检查溢出
+  freeCnt := (freeCnt + dispatchCnt) - out.fire
+  dispatch.freeCnt := freeCnt
+  when (io.flush) {
+    freeCnt := entryN.U
+  }
 
   // 唤醒
   val rsWaken = WireDefault(rs)
