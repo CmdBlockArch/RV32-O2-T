@@ -22,6 +22,10 @@ class PC extends Bundle {
 
 object PC {
   def apply(): PC = new PC
+  def apply(addr: UInt): PC = {
+    assert(addr.getWidth == 32)
+    addr(31, 2).asTypeOf(PC())
+  }
   val resetPC = resetVec(31, 2).asTypeOf(PC())
 
   def regInit = {
