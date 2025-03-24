@@ -2,7 +2,7 @@ package core.dispatch
 
 import chisel3._
 import chisel3.util.Decoupled
-import conf.Conf.dispatchWidth
+import conf.Conf.{dispatchWidth, prfW, wbWidth}
 import core.issue.Issue
 import core.rename.Rename
 import core.wb.PhyRegFile
@@ -11,6 +11,7 @@ class Dispatch extends Module {
   val in = IO(Flipped(Decoupled(new Rename.OutBundle)))
   val robAlloc = IO(new ReorderBuffer.DispatchIO)
   val prfProbe = IO(Vec(dispatchWidth * 2, new PhyRegFile.ProbeIO))
+  val wbRd = IO(Input(Vec(wbWidth, UInt(prfW.W))))
   val io = IO(new Bundle {
     val flush = Input(Bool())
   })
@@ -51,8 +52,8 @@ class Dispatch extends Module {
   for (i <- 0 until dispatchWidth) {
     prfProbe(i * 2).rs := cur.gpr(i).rs1
     prfProbe(i * 2 + 1).rs := cur.gpr(i).rs2
-    rs1Ready(i) := prfProbe(i * 2).ready
-    rs2Ready(i) := prfProbe(i * 2 + 1).ready
+    rs1Ready(i) := prfProbe(i * 2).ready || wbRd.contains(cur.gpr(i).rs1)
+    rs2Ready(i) := prfProbe(i * 2 + 1).ready || wbRd.contains(cur.gpr(i).rs2)
   }
 
   // ---------- 分派信息生成 ----------

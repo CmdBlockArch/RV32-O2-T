@@ -67,6 +67,7 @@ class Top extends Module {
   // dispatch
   rob.dispatch :<>= dispatch.robAlloc
   prf.probe :<>= dispatch.prfProbe
+  dispatch.wbRd := 0.U.asTypeOf(dispatch.wbRd)
   dispatch.io.flush := redirect
   alu0Issue.dispatch :<>= dispatch.alu(0)
   alu1Issue.dispatch :<>= dispatch.alu(1)
