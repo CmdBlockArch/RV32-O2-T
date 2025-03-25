@@ -14,3 +14,10 @@ class BruWbBundle extends WbBundle {
   val jmp = Bool()
   val jmpPC = PC()
 }
+
+class LsuWbBundle extends WbBundle {
+  val mmio = Bool()
+  val mmioOp = UInt(4.W)
+  val mmioAddr = UInt(32.W)
+  val mmioData = UInt(32.W)
+}

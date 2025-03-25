@@ -7,6 +7,7 @@ class PhyRegFile extends Module {
   import PhyRegFile._
 
   val probe = IO(Vec(dispatchWidth * 2, Flipped(new ProbeIO)))
+  val wbRd = IO(Output(Vec(wbWidth, UInt(prfW.W))))
   val read = IO(Vec(wbWidth * 2, Flipped(new ReadIO)))
   val write = IO(Vec(wbWidth, Flipped(new WriteIO)))
 
@@ -16,6 +17,10 @@ class PhyRegFile extends Module {
   probe.foreach(p => {
     p.ready := Mux(p.rs === 0.U, true.B, ready(p.rs))
   })
+
+  for (i <- 0 until wbWidth) {
+    wbRd(i) := Mux(write(i).en, write(i).rd, 0.U)
+  }
 
   read.foreach(r => {
     r.src := Mux(r.rs === 0.U, 0.U, prf(r.rs))

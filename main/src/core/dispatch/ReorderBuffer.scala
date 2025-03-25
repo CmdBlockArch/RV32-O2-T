@@ -1,14 +1,14 @@
 package core.dispatch
 
 import chisel3._
-import chisel3.util._
-import conf.Conf.{robN, robW, prfW, dispatchWidth}
+import conf.Conf.{dispatchWidth, prfW, robN, robW, wbWidth}
 import utils._
 
 class ReorderBuffer extends Module {
   import ReorderBuffer._
 
   val dispatch = IO(Flipped(new DispatchIO))
+  val wb = IO(Vec(wbWidth, Flipped(new WbIO)))
 
   val rob = Reg(Vec(robN, new Entry))
   val freeCnt = RegInit(robN.U((robW + 1).W))
@@ -25,11 +25,20 @@ class ReorderBuffer extends Module {
   assert(dispatch.valid(0) || !dispatch.valid(1))
 
   // 写入ROB
-  when (dispatch.valid(0)) {
-    rob(enqPtr) := dispatch.entry(0)
+  for (i <- 0 until dispatchWidth) {
+    when (dispatch.valid(i)) {
+      rob(enqPtr + i.U).dp := dispatch.entry(i)
+      rob(enqPtr + i.U).wb.jmp := false.B
+      rob(enqPtr + i.U).wb.mmio := false.B
+    }
   }
-  when (dispatch.valid(1)) {
-    rob(enqPtr + 1.U) := dispatch.entry(1)
+
+  // --------- write back ----------
+  for (i <- 0 until wbWidth) {
+    when (wb(i).valid) {
+      rob(wb(i).robIdx).dp.wb := true.B
+      rob(wb(i).robIdx).wb := wb(i).entry
+    }
   }
 
   // --------- commit ----------
@@ -37,11 +46,26 @@ class ReorderBuffer extends Module {
 }
 
 object ReorderBuffer {
-  class Entry extends Bundle {
+  class DispatchBundle extends Bundle {
     val pc = PC()
     val arfRd = UInt(5.W)
     val prfRd = UInt(prfW.W)
     val wb = Bool()
+  }
+
+  class WbBundle extends Bundle {
+    val jmp = Bool()
+    val jmpPc = PC()
+
+    val mmio = Bool()
+    val mmioOp = UInt(4.W)
+    val mmioAddr = UInt(32.W)
+    val mmioData = UInt(32.W)
+  }
+
+  class Entry extends Bundle {
+    val dp = new DispatchBundle
+    val wb = new WbBundle
   }
 
   class DispatchIO extends Bundle {
@@ -49,6 +73,12 @@ object ReorderBuffer {
     val enqPtr = Input(UInt(robW.W))
 
     val valid = Output(Vec(dispatchWidth, Bool()))
-    val entry = Output(Vec(dispatchWidth, new Entry))
+    val entry = Output(Vec(dispatchWidth, new DispatchBundle))
+  }
+
+  class WbIO extends Bundle {
+    val valid = Output(Bool())
+    val robIdx = Output(UInt(robW.W))
+    val entry = Output(new WbBundle)
   }
 }

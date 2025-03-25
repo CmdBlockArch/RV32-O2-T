@@ -24,7 +24,7 @@ class UselessLsu extends PiplineModule(new Issue.OutBundle(new LsuBundle), new W
   val mem = cur.inst.mem
   val data = cur.src2
 
-  import Lsu.State._
+  import UselessLsu.State._
   val state = RegInit(stIdle)
   val idle = state === stIdle
   val hold = state === stHold
@@ -74,7 +74,7 @@ class UselessLsu extends PiplineModule(new Issue.OutBundle(new LsuBundle), new W
   arbWrite.last := true.B
 }
 
-object Lsu {
+object UselessLsu {
   object State extends ChiselEnum {
     val stIdle, stRead, stWrite, stHold = Value
   }

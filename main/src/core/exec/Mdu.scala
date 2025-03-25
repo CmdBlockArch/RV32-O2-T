@@ -2,13 +2,13 @@ package core.exec
 
 import chisel3._
 import chisel3.util._
-import core.dispatch.BruBundle
+import core.dispatch.MduBundle
 import core.exec.mdu.{Mul, Div}
 import core.issue.Issue
 import core.wb.WbBundle
 import utils._
 
-class Mdu extends PiplineModule(new Issue.OutBundle(new BruBundle), new WbBundle) {
+class Mdu extends PiplineModule(new Issue.OutBundle(new MduBundle), new WbBundle) {
   val src1 = cur.src1
   val src2 = cur.src2
   val func = cur.inst.func
