@@ -45,24 +45,24 @@ class OooResvStation[T <: Data](entryN: Int, payload: => T)
   val validNext = WireDefault(validShift)
 
   // 指令0写入
-  when (valid(0) === 0.U && inValid(0)) {
+  when (validShift(0) === 0.U && inValid(0)) {
     validNext(0) := true.B
     rs(0) := inEntry(0)
   }
   for (i <- 1 until entryN) {
-    when (valid(i) === 0.U && valid(i - 1) === 1.U && inValid(0)) {
+    when (validShift(i) === 0.U && validShift(i - 1) === 1.U && inValid(0)) {
       validNext(i) := true.B
       rs(i) := inEntry(0)
     }
   }
 
   // 指令1写入
-  when (valid(0) === 0.U && inValid(1)) {
+  when (validShift(0) === 0.U && inValid(1)) {
     validNext(1) := true.B
     rs(1) := inEntry(1)
   }
   for (i <- 2 until entryN) {
-    when (valid(i - 1) === 0.U && valid(i - 2) === 1.U && inValid(1)) {
+    when (validShift(i - 1) === 0.U && validShift(i - 2) === 1.U && inValid(1)) {
       validNext(i) := true.B
       rs(i) := inEntry(1)
     }
