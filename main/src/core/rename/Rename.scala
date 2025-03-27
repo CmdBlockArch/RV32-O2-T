@@ -1,11 +1,14 @@
 package core.rename
 
 import chisel3._
-import conf.Conf.{decodeWidth, prfN, prfW, renameWidth}
+import conf.Conf.{commitWidth, decodeWidth, prfN, prfW, renameWidth}
 import core.decode.{Decode, InstDecoder}
 import utils._
 
 class Rename extends PiplineModule(new Decode.OutBundle, new Rename.OutBundle) {
+  val prfFree = IO(Input(Vec(commitWidth, UInt(prfW.W))))
+
+  // ---------- 物理寄存器分配 ----------
   res.pc := cur.pc
 
   assert(decodeWidth == renameWidth)
@@ -56,11 +59,28 @@ class Rename extends PiplineModule(new Decode.OutBundle, new Rename.OutBundle) {
   when (update) {
     rat := ratBefore
     deqPtr := deqPtr + allocCnt
-    count := count - allocCnt
   }
 
-  // TODO: 物理寄存器释放
+  // ---------- 物理寄存器释放 ----------
+  val freeCnt = prfFree.count(_ =/= 0.U)
+  enqPtr := enqPtr + freeCnt
+
+  assert(commitWidth == 2)
+  when (freeCnt.orR) {
+    freeList(enqPtr) := Mux(prfFree(0).orR, prfFree(0), prfFree(1))
+  }
+  when (freeCnt(1)) { // freeCnt === 2.U
+    freeList(enqPtr + 1.U) := prfFree(1)
+  }
+
+  // ---------- 分支预测失败恢复 ----------
   // TODO: 从ROB的RAT中恢复状态
+
+  when (update) {
+    count := (count + freeCnt) - allocCnt
+  } .otherwise {
+    count := count + freeCnt
+  }
 }
 
 object Rename {

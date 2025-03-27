@@ -1,7 +1,7 @@
 package core.dispatch
 
 import chisel3._
-import conf.Conf.{dispatchWidth, prfW, robN, robW, wbWidth}
+import conf.Conf.{commitWidth, dispatchWidth, prfW, robN, robW, wbWidth}
 import utils._
 
 class ReorderBuffer extends Module {
@@ -9,6 +9,7 @@ class ReorderBuffer extends Module {
 
   val dispatch = IO(Flipped(new DispatchIO))
   val wb = IO(Vec(wbWidth, Flipped(new WbIO)))
+  val commit = IO(Flipped(new CommitIO))
 
   val rob = Reg(Vec(robN, new Entry))
   val freeCnt = RegInit(robN.U((robW + 1).W))
@@ -18,7 +19,8 @@ class ReorderBuffer extends Module {
   // ---------- dispatch ----------
   dispatch.freeCnt := freeCnt
   dispatch.enqPtr := enqPtr
-  enqPtr := enqPtr + dispatch.valid.count(_.asBool)
+  val enqCnt = dispatch.valid.count(_.asBool)
+  enqPtr := enqPtr + enqCnt
 
   // 不能出现后一个valid但前一个invalid的情况
   assert(dispatchWidth == 2)
@@ -42,7 +44,14 @@ class ReorderBuffer extends Module {
   }
 
   // --------- commit ----------
-  // TODO: 提交逻辑
+  commit.freeCnt := freeCnt
+  for (i <- 0 until commitWidth) {
+    commit.entry(i) := rob(deqPtr + i.U)
+  }
+  deqPtr := deqPtr + commit.deqCnt
+
+  // ---------- freeCnt ----------
+  freeCnt := (freeCnt + commit.deqCnt) - enqCnt
 }
 
 object ReorderBuffer {
@@ -61,6 +70,8 @@ object ReorderBuffer {
     val mmioOp = UInt(4.W)
     val mmioAddr = UInt(32.W)
     val mmioData = UInt(32.W)
+
+    def trivial = !jmp && !mmio
   }
 
   class Entry extends Bundle {
@@ -80,5 +91,18 @@ object ReorderBuffer {
     val valid = Output(Bool())
     val robIdx = Output(UInt(robW.W))
     val entry = Output(new WbBundle)
+  }
+
+  class CommitIO extends Bundle {
+    val freeCnt = Input(UInt((robW + 1).W))
+    val entry = Input(Vec(commitWidth, new Entry))
+
+    val deqCnt = Output(UInt(robW.W))
+
+    def cnt = {
+      val res = robN.U - freeCnt
+      assert(res.getWidth == robW + 1)
+      res
+    }
   }
 }

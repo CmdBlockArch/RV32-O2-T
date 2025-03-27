@@ -12,6 +12,7 @@ object Conf {
   val decodeWidth = 2
   val renameWidth = 2
   val dispatchWidth = 2
+  val commitWidth = 2
 
   val wbWidth = 5
 

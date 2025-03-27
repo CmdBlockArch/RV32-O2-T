@@ -23,7 +23,7 @@ class Dispatch extends Module {
 
   val valid = RegInit(false.B)
   val cur = Reg(new Rename.OutBundle)
-  val ready = WireDefault(false.B)
+  val ready = Wire(Bool())
   val update = valid && ready
 
   in.ready := !valid || ready

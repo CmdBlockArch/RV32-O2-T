@@ -59,6 +59,9 @@ class Top extends Module {
   val mduWb = Module(new core.wb.WriteBack)
   val lsuWb = Module(new core.wb.LsuWriteBack)
 
+  // 提交
+  val commit = Module(new core.commit.Commit)
+
   // ---------- 连线 ----------
   // fetch
   axiReadArb.master(0) :<>= fetch.arbRead
@@ -148,4 +151,7 @@ class Top extends Module {
   rob.wb(4) :<>= lsuWb.robWrite
   lsuWb.io.flush := redirect
 
+  // commit
+  rob.commit :<>= commit.rob
+  rename.prfFree := commit.prfFree
 }
