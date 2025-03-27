@@ -36,7 +36,7 @@ class ResvStation[T <: Data](entryN: Int, payload: => T) extends Module {
   val freeCnt = RegInit(entryN.U(cntW.W))
   val dispatchCnt = dispatch.valid.count(_.asBool)
   assert(dispatchCnt <= freeCnt) // 检查溢出
-  freeCnt := (freeCnt + dispatchCnt) - out.fire
+  freeCnt := (freeCnt + out.fire) - dispatchCnt
   dispatch.freeCnt := freeCnt
   when (io.flush) {
     freeCnt := entryN.U
