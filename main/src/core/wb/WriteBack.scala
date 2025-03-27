@@ -42,7 +42,7 @@ class BruWriteBack extends WbCommon(new BruWbBundle) {
   prfWrite.en := valid
 
   robWrite.entry.jmp := cur.jmp
-  robWrite.entry.jmpPc := cur.jmpPC
+  robWrite.entry.addr := cur.jmpPC.full
   robWrite.entry.mmio := false.B
 }
 
@@ -52,6 +52,6 @@ class LsuWriteBack extends WbCommon(new LsuWbBundle) {
   robWrite.entry.jmp := false.B
   robWrite.entry.mmio := cur.mmio
   robWrite.entry.mmioOp := cur.mmioOp
-  robWrite.entry.mmioAddr := cur.mmioAddr
+  robWrite.entry.addr := cur.mmioAddr
   robWrite.entry.mmioData := cur.mmioData
 }

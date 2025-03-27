@@ -24,8 +24,8 @@ class Commit extends Module {
   val ready = entry(0).wb.trivial || hold
 
   // ---------- ROB读取 ----------
-  val robH1 = rob.cnt.orR && rob.entry(0).dp.wb
-  val robH2 = rob.cnt(robW, 1).orR && rob.entry(0).dp.wb && rob.entry(1).dp.wb
+  val robH1 = rob.count.orR && rob.entry(0).dp.wb
+  val robH2 = rob.count(robW, 1).orR && rob.entry(0).dp.wb && rob.entry(1).dp.wb
   val robR2 = rob.entry(0).wb.trivial && rob.entry(1).wb.trivial
 
   when (!valid(0) || ready) { // 可以接收新指令

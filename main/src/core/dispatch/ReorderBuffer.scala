@@ -1,6 +1,7 @@
 package core.dispatch
 
 import chisel3._
+import chisel3.util._
 import conf.Conf.{commitWidth, dispatchWidth, prfW, robN, robW, wbWidth}
 import utils._
 
@@ -12,12 +13,12 @@ class ReorderBuffer extends Module {
   val commit = IO(Flipped(new CommitIO))
 
   val rob = Reg(Vec(robN, new Entry))
-  val freeCnt = RegInit(robN.U((robW + 1).W))
+  val count = RegInit(0.U(cntW.W))
   val enqPtr = RegInit(0.U(robW.W))
   val deqPtr = RegInit(0.U(robW.W))
 
   // ---------- dispatch ----------
-  dispatch.freeCnt := freeCnt
+  dispatch.freeCnt := robN.U - count
   dispatch.enqPtr := enqPtr
   val enqCnt = dispatch.valid.count(_.asBool)
   enqPtr := enqPtr + enqCnt
@@ -44,17 +45,19 @@ class ReorderBuffer extends Module {
   }
 
   // --------- commit ----------
-  commit.freeCnt := freeCnt
+  commit.count := count
   for (i <- 0 until commitWidth) {
     commit.entry(i) := rob(deqPtr + i.U)
   }
   deqPtr := deqPtr + commit.deqCnt
 
-  // ---------- freeCnt ----------
-  freeCnt := (freeCnt + commit.deqCnt) - enqCnt
+  // ---------- count ----------
+  count := (count + enqCnt) - commit.deqCnt
 }
 
 object ReorderBuffer {
+  val cntW = log2Ceil(robN + 1)
+
   class DispatchBundle extends Bundle {
     val pc = PC()
     val arfRd = UInt(5.W)
@@ -63,12 +66,12 @@ object ReorderBuffer {
   }
 
   class WbBundle extends Bundle {
+    val addr = UInt(32.W) // jmpPC or mmioAddr
+
     val jmp = Bool()
-    val jmpPc = PC()
 
     val mmio = Bool()
     val mmioOp = UInt(4.W)
-    val mmioAddr = UInt(32.W)
     val mmioData = UInt(32.W)
 
     def trivial = !jmp && !mmio
@@ -80,7 +83,7 @@ object ReorderBuffer {
   }
 
   class DispatchIO extends Bundle {
-    val freeCnt = Input(UInt((robW + 1).W))
+    val freeCnt = Input(UInt(cntW.W))
     val enqPtr = Input(UInt(robW.W))
 
     val valid = Output(Vec(dispatchWidth, Bool()))
@@ -94,15 +97,9 @@ object ReorderBuffer {
   }
 
   class CommitIO extends Bundle {
-    val freeCnt = Input(UInt((robW + 1).W))
+    val count = Input(UInt(cntW.W))
     val entry = Input(Vec(commitWidth, new Entry))
 
     val deqCnt = Output(UInt(robW.W))
-
-    def cnt = {
-      val res = robN.U - freeCnt
-      assert(res.getWidth == robW + 1)
-      res
-    }
   }
 }
