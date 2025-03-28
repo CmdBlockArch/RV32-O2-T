@@ -34,7 +34,7 @@ class ReorderBuffer extends Module {
   for (i <- 0 until dispatchWidth) {
     when (dispatch.valid(i)) {
       rob(enqPtr + i.U).dp := dispatch.entry(i)
-      rob(enqPtr + i.U).wb.jmp := false.B
+      rob(enqPtr + i.U).wb.trivial := true.B
       rob(enqPtr + i.U).wb.mmio := false.B
     }
   }
@@ -75,15 +75,14 @@ object ReorderBuffer {
   }
 
   class WbBundle extends Bundle {
+    val trivial = Bool()
     val addr = UInt(32.W) // jmpPC or mmioAddr
-
-    val jmp = Bool()
 
     val mmio = Bool()
     val mmioOp = UInt(4.W)
     val mmioData = UInt(32.W)
 
-    def trivial = !jmp && !mmio
+    def jmp = !trivial && !mmio
   }
 
   class Entry extends Bundle {

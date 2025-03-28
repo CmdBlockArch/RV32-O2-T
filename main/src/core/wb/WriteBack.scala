@@ -34,14 +34,14 @@ class WbCommon[T <: WbBundle](wbType: T) extends Module {
 class WriteBack extends WbCommon(new WbBundle) {
   prfWrite.en := valid
 
-  robWrite.entry.jmp := false.B
+  robWrite.entry.trivial := true.B
   robWrite.entry.mmio := false.B
 }
 
 class BruWriteBack extends WbCommon(new BruWbBundle) {
   prfWrite.en := valid
 
-  robWrite.entry.jmp := cur.jmp
+  robWrite.entry.trivial := !cur.jmp
   robWrite.entry.addr := cur.jmpPC.full
   robWrite.entry.mmio := false.B
 }
@@ -49,7 +49,7 @@ class BruWriteBack extends WbCommon(new BruWbBundle) {
 class LsuWriteBack extends WbCommon(new LsuWbBundle) {
   prfWrite.en := false.B
 
-  robWrite.entry.jmp := false.B
+  robWrite.entry.trivial := !cur.mmio
   robWrite.entry.mmio := cur.mmio
   robWrite.entry.mmioOp := cur.mmioOp
   robWrite.entry.addr := cur.mmioAddr
