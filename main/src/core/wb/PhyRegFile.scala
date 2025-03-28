@@ -1,7 +1,8 @@
 package core.wb
 
 import chisel3._
-import conf.Conf.{prfN, prfW, dispatchWidth, wbWidth}
+import conf.Conf.{prfN, prfW, dispatchWidth, wbWidth, debug}
+import utils.Debug._
 
 class PhyRegFile extends Module {
   import PhyRegFile._
@@ -45,6 +46,14 @@ class PhyRegFile extends Module {
         assert(!wConflict)
       }
     }
+  }
+
+  // debug
+  val dbgOut = DebugIO(new Bundle {
+    val prf = Output(Vec(prfN, UInt(32.W)))
+  })
+  if (debug) {
+    dbgOut.get.prf := prf
   }
 }
 

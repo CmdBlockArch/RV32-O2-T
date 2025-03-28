@@ -4,6 +4,7 @@ import chisel3._
 import utils._
 import conf.Conf._
 import core.dispatch._
+import utils.Debug._
 
 class Top extends Module {
   // ---------- 总线 ----------
@@ -160,4 +161,20 @@ class Top extends Module {
   prf.write(4) :<>= commit.prfWrite
   axiReadArb.master(1) :<>= commit.arbRead
   axiWriteArb.master(0) :<>= commit.arbWrite
+
+  // ---------- debug ----------
+  val dbgOut = DebugIO(new Bundle {
+    val commit = Output(Bool())
+    val robValid = Output(Vec(commitWidth, Bool()))
+    val robEntry = Output(Vec(commitWidth, new ReorderBuffer.Entry))
+    val rat = Output(Vec(32, UInt(prfW.W)))
+    val prf = Output(Vec(prfN, UInt(32.W)))
+  })
+  if (debug) {
+    dbgOut.get.commit := commit.dbgOut.get.commit
+    dbgOut.get.robValid := commit.dbgOut.get.valid
+    dbgOut.get.robEntry := commit.dbgOut.get.entry
+    dbgOut.get.rat := commit.dbgOut.get.rat
+    dbgOut.get.prf := prf.dbgOut.get.prf
+  }
 }

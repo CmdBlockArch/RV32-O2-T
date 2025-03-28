@@ -2,11 +2,12 @@ package core.commit
 
 import chisel3._
 import chisel3.util._
-import conf.Conf.{commitWidth, prfW, robW}
+import conf.Conf.{commitWidth, debug, prfW, robW}
 import core.dispatch.ReorderBuffer
 import core.wb.PhyRegFile
 import perip.{AxiReadArb, AxiWriteArb}
 import utils._
+import utils.Debug._
 
 class Commit extends Module {
   val rob = IO(new ReorderBuffer.CommitIO)
@@ -147,6 +148,23 @@ class Commit extends Module {
   arbWrite.data := data << Cat(addr(1, 0), 0.U(3.W))
   arbWrite.strb := Cat(Fill(2, mem(1)), mem(1, 0).orR, 1.U(1.W)) << addr(1, 0)
   arbWrite.last := true.B
+
+  // ---------- debug ----------
+  val dbgCommit = DebugRegNext(valid(0) && ready, false.B)
+  val dbgValid = DebugRegNext(valid)
+  val dbgEntry = DebugRegNext(entry)
+  val dbgOut = DebugIO(new Bundle {
+    val commit = Output(Bool())
+    val valid = Output(Vec(commitWidth, Bool()))
+    val entry = Output(Vec(commitWidth, new ReorderBuffer.Entry))
+    val rat = Output(Vec(32, UInt(prfW.W)))
+  })
+  if (debug) {
+    dbgOut.get.commit := dbgCommit.get
+    dbgOut.get.valid := dbgValid.get
+    dbgOut.get.entry := dbgEntry.get
+    dbgOut.get.rat := rat
+  }
 }
 
 object Commit {
