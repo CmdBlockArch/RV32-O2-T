@@ -7,6 +7,7 @@ import utils._
 
 class Rename extends PiplineModule(new Decode.OutBundle, new Rename.OutBundle) {
   val prfFree = IO(Input(Vec(commitWidth, UInt(prfW.W))))
+  val commitRat = IO(Input(Vec(32, UInt(prfW.W))))
 
   // ---------- 物理寄存器分配 ----------
   res.pc := cur.pc
@@ -74,7 +75,10 @@ class Rename extends PiplineModule(new Decode.OutBundle, new Rename.OutBundle) {
   }
 
   // ---------- 分支预测失败恢复 ----------
-  // TODO: 从ROB的RAT中恢复状态
+  when (flush) {
+    rat := commitRat
+    deqPtr := enqPtr + commitRat.count(_.orR) + 1.U
+  }
 
   when (update) {
     count := (count + freeCnt) - allocCnt

@@ -11,6 +11,9 @@ class ReorderBuffer extends Module {
   val dispatch = IO(Flipped(new DispatchIO))
   val wb = IO(Vec(wbWidth, Flipped(new WbIO)))
   val commit = IO(Flipped(new CommitIO))
+  val io = IO(new Bundle {
+    val flush = Input(Bool())
+  })
 
   val rob = Reg(Vec(robN, new Entry))
   val count = RegInit(0.U(cntW.W))
@@ -51,8 +54,14 @@ class ReorderBuffer extends Module {
   }
   deqPtr := deqPtr + commit.deqCnt
 
-  // ---------- count ----------
-  count := (count + enqCnt) - commit.deqCnt
+  // ---------- count & flush ----------
+  when (io.flush) {
+    count := 0.U
+    enqPtr := 0.U
+    deqPtr := 0.U
+  } .otherwise {
+    count := (count + enqCnt) - commit.deqCnt
+  }
 }
 
 object ReorderBuffer {

@@ -29,6 +29,7 @@ class Top extends Module {
 
   // 公用模块
   val rob = Module(new core.dispatch.ReorderBuffer)
+  rob.io.flush := redirect
   val prf = Module(new core.wb.PhyRegFile)
   prf.write := 0.U.asTypeOf(prf.write)
 
@@ -67,7 +68,7 @@ class Top extends Module {
   axiReadArb.master(0) :<>= fetch.arbRead
   decode.in :<>= fetch.out
   fetch.io.redirect := redirect
-  fetch.io.redirectPC := PC.resetPC
+  fetch.io.redirectPC := commit.io.redirectPC
   fetch.io.fenceI := fenceI
 
   // decode
@@ -76,6 +77,7 @@ class Top extends Module {
 
   // rename
   rename.flush := redirect
+  rename.commitRat := commit.io.rat
   dispatch.in :<>= rename.out
 
   // dispatch
@@ -147,11 +149,13 @@ class Top extends Module {
 
   lsuExec.flush := redirect
   lsuWb.in :<>= lsuExec.out
-  prf.write(4) :<>= lsuWb.prfWrite
+  // prf.write(4) :<>= lsuWb.prfWrite
   rob.wb(4) :<>= lsuWb.robWrite
   lsuWb.io.flush := redirect
 
   // commit
   rob.commit :<>= commit.rob
   rename.prfFree := commit.prfFree
+  redirect := commit.io.redirect
+  prf.write(4) :<>= commit.prfWrite
 }

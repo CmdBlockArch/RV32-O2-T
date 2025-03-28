@@ -1,12 +1,22 @@
 package core.commit
 
 import chisel3._
+import chisel3.util._
 import conf.Conf.{commitWidth, prfW, robW}
 import core.dispatch.ReorderBuffer
+import core.wb.PhyRegFile
+import utils._
 
 class Commit extends Module {
   val rob = IO(new ReorderBuffer.CommitIO)
   val prfFree = IO(Output(Vec(commitWidth, UInt(prfW.W))))
+  val prfWrite = IO(new PhyRegFile.WriteIO)
+  val io = IO(new Bundle {
+    val redirect = Output(Bool())
+    val redirectPC = Output(PC())
+
+    val rat = Output(Vec(32, UInt(prfW.W)))
+  })
 
   val valid = RegInit(VecInit(Seq.fill(commitWidth)(false.B)))
   val entry = Reg(Vec(commitWidth, new ReorderBuffer.Entry))
@@ -76,13 +86,32 @@ class Commit extends Module {
     Mux(idle && v, rat(e.dp.arfRd), 0.U)
   }
 
-  // ---------- MMIO & JMP ----------
+  // ---------- 状态机 ----------
+  when (hold) {
+    state := stIdle
+  }
+
+  // ---------- 分支预测失败恢复 ----------
+  when (idle && valid(0) && entry(0).wb.jmp) {
+    state := stJmp
+  }
+  val doRedirect = state === stJmp
+  when (doRedirect) {
+    state := stHold
+  }
+  io.redirect := doRedirect
+  io.redirectPC := PC(entry(0).wb.addr)
+  io.rat := rat
+
+  // ---------- MMIO ----------
   // TODO: 状态机
+  prfWrite := 0.U.asTypeOf(prfWrite)
+
 
 }
 
 object Commit {
   object State extends ChiselEnum {
-    val stIdle, stRead, stWrite, stHold = Value
+    val stIdle, stRead, stWrite, stHold, stJmp = Value
   }
 }
