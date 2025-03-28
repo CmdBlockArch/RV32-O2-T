@@ -7,19 +7,19 @@ import core.dispatch._
 
 class Top extends Module {
   // ---------- 总线 ----------
-  val axiReadArb = Module(new perip.AxiReadArb(1))
-  // val axiWriteArb = Module(new perip.AxiWriteArb(1))
+  val axiReadArb = Module(new perip.AxiReadArb(2))
+  val axiWriteArb = Module(new perip.AxiWriteArb(1))
 
   if (debug) {
     val simMemRead = Module(new perip.SimMemRead)
-    // val simMemWrite = Module(new perip.SimMemWrite)
+    val simMemWrite = Module(new perip.SimMemWrite)
     simMemRead.io :<>= axiReadArb.slave
-    // simMemWrite.io :<>= axiWriteArb.slave
+    simMemWrite.io :<>= axiWriteArb.slave
   } else {
     val axiReadIO = IO(new perip.AxiReadIO)
-    // val axiWriteIO = IO(new perip.AxiWriteIO)
+    val axiWriteIO = IO(new perip.AxiWriteIO)
     axiReadIO :<>= axiReadArb.slave
-    // axiWriteIO :<>= axiWriteArb.slave
+    axiWriteIO :<>= axiWriteArb.slave
   }
 
   // ---------- 模块实例化 ----------
@@ -158,4 +158,6 @@ class Top extends Module {
   rename.prfFree := commit.prfFree
   redirect := commit.io.redirect
   prf.write(4) :<>= commit.prfWrite
+  axiReadArb.master(1) :<>= commit.arbRead
+  axiWriteArb.master(0) :<>= commit.arbWrite
 }

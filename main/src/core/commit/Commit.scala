@@ -5,12 +5,15 @@ import chisel3.util._
 import conf.Conf.{commitWidth, prfW, robW}
 import core.dispatch.ReorderBuffer
 import core.wb.PhyRegFile
+import perip.{AxiReadArb, AxiWriteArb}
 import utils._
 
 class Commit extends Module {
   val rob = IO(new ReorderBuffer.CommitIO)
   val prfFree = IO(Output(Vec(commitWidth, UInt(prfW.W))))
   val prfWrite = IO(new PhyRegFile.WriteIO)
+  val arbRead = IO(new AxiReadArb.ReadIO)
+  val arbWrite = IO(new AxiWriteArb.WriteIO)
   val io = IO(new Bundle {
     val redirect = Output(Bool())
     val redirectPC = Output(PC())
@@ -104,10 +107,46 @@ class Commit extends Module {
   io.rat := rat
 
   // ---------- MMIO ----------
-  // TODO: 状态机
-  prfWrite := 0.U.asTypeOf(prfWrite)
+  val memEn = valid(0) && entry(0).wb.mmio
+  val mem = entry(0).wb.mmioOp
+  val addr = entry(0).wb.addr
+  val data = entry(0).wb.mmioData
+  val dataValid = RegInit(false.B)
+  val rdVal = Reg(UInt(32.W))
+  when (idle && memEn) {
+    when (mem(3)) {
+      state := stRead
+    } .otherwise {
+      state := stWrite
+      dataValid := true.B
+    }
+  }
+  when (arbRead.resp) {
+    state := stHold
+    rdVal := arbRead.data
+  }
+  when (arbWrite.dataReady) { dataValid := false.B }
+  when (arbWrite.resp) { state := stHold }
 
+  prfWrite.en := hold && memEn
+  prfWrite.rd := entry(0).dp.prfRd
+  prfWrite.data := rdVal
 
+  arbRead.req := state === stRead
+  arbRead.addr := addr
+  arbRead.size := mem(1, 0)
+  arbRead.burst := 0.U
+  arbRead.len := 0.U
+
+  arbWrite.req := state === stWrite
+  arbWrite.addr := addr
+  arbWrite.size := mem(1, 0)
+  arbWrite.burst := 0.U
+  arbWrite.len := 0.U
+  arbWrite.dataValid := dataValid
+  arbWrite.data := data << Cat(addr(1, 0), 0.U(3.W))
+  arbWrite.strb := Cat(Fill(2, mem(1)), mem(1, 0).orR, 1.U(1.W)) << addr(1, 0)
+  arbWrite.last := true.B
 }
 
 object Commit {
