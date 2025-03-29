@@ -71,6 +71,7 @@ object ReorderBuffer {
     val pc = PC()
     val arfRd = UInt(5.W)
     val prfRd = UInt(prfW.W)
+    val ebreak = Bool()
     val wb = Bool()
   }
 

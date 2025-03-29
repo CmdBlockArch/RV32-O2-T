@@ -43,6 +43,7 @@ class Dispatch extends Module {
     robAlloc.entry(i).pc := cur.pc.next(i)
     robAlloc.entry(i).arfRd := cur.gpr(i).ard
     robAlloc.entry(i).prfRd := cur.gpr(i).rd
+    robAlloc.entry(i).ebreak := cur.inst(i).err // 现在只有一种异常，即ebreak
     robAlloc.entry(i).wb := cur.inst(i).err // 异常指令可以直接提交
   }
 
