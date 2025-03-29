@@ -15,34 +15,16 @@ abstract class PiplineModule[TI <: Data, TO <: Data]
 
   val outCond = WireDefault(true.B)
 
-  // 流水级处理每一次数据期间，update都只保持一周期为高，且该周期updateCond为高
-  // 用于更新存储器的状态，避免在流水级阻塞时重复多次更新
-  // 如果使用out.fire作为某些存储器更新的条件，考虑到流水线反压串扰，时序会很差
-  val updateReg = RegInit(false.B)
-  val updateCond = WireDefault(false.B)
-  when (updateReg && updateCond) {
-    updateReg := false.B
-    // 若有新数据到来，会被下面的更新覆盖
-  }
-  val update = updateReg && updateCond
-
   in.ready := !valid || (out.ready && outCond)
   out.valid := valid && outCond
   when (in.fire) {
     valid := !flush
-    updateReg := !flush
     cur := in.bits
   } .elsewhen (out.fire || flush) {
     valid := false.B
-    updateReg := false.B
   }
 
   def setOutCond(cond: Bool) = {
     outCond := cond
-  }
-  def setUpdateCond(cond: Bool) = {
-    updateCond := cond
-    // update完成后即可接收新数据
-    setOutCond(updateCond || !updateReg)
   }
 }

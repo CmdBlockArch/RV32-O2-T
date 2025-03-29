@@ -33,7 +33,7 @@ class Rename extends PiplineModule(new Decode.OutBundle, new Rename.OutBundle) {
     .map(i => cur.valid(i) && cur.gpr(i).rd.orR)) // 需要分配物理寄存器的指令
   val allocCnt = Wire(UInt(prfW.W)) // 需要分配的物理寄存器数量
   allocCnt := needAlloc.count(_.asBool)
-  setUpdateCond(count >= allocCnt) // 阻塞，直到有足够的空闲寄存器
+  setOutCond(count >= allocCnt) // 阻塞，直到有足够的空闲寄存器
 
   var ratBefore = WireDefault(rat)
   var deqBefore = WireDefault(deqPtr)
@@ -57,7 +57,7 @@ class Rename extends PiplineModule(new Decode.OutBundle, new Rename.OutBundle) {
   }
 
   // 更新重命名数据结构
-  when (update) {
+  when (out.fire) {
     rat := ratBefore
     deqPtr := deqPtr + allocCnt
   }
@@ -74,16 +74,18 @@ class Rename extends PiplineModule(new Decode.OutBundle, new Rename.OutBundle) {
     freeList(enqPtr + 1.U) := prfFree(1)
   }
 
-  // ---------- 分支预测失败恢复 ----------
-  when (flush) {
-    rat := commitRat
-    deqPtr := enqPtr + commitRat.count(_.orR) + 1.U
-  }
-
-  when (update) {
+  when (out.fire) {
     count := (count + freeCnt) - allocCnt
   } .otherwise {
     count := count + freeCnt
+  }
+
+  // ---------- 分支预测失败恢复 ----------
+  val commitRatAllocCnt = commitRat.count(_.orR)
+  when (flush) {
+    rat := commitRat
+    deqPtr := enqPtr + commitRatAllocCnt + 1.U
+    count := (prfN - 1).U - commitRatAllocCnt
   }
 }
 
