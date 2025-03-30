@@ -32,7 +32,6 @@ class Top extends Module {
   val rob = Module(new core.dispatch.ReorderBuffer)
   rob.io.flush := redirect
   val prf = Module(new core.wb.PhyRegFile)
-  prf.write := 0.U.asTypeOf(prf.write)
 
   // 顺序流水级
   val fetch = Module(new core.fetch.Fetch)
@@ -89,7 +88,7 @@ class Top extends Module {
   // dispatch
   rob.dispatch :<>= dispatch.robAlloc
   prf.probe :<>= dispatch.prfProbe
-  dispatch.wbRd := 0.U.asTypeOf(dispatch.wbRd)
+  dispatch.wbRd := prf.wbRd
   dispatch.io.flush := redirect
   alu0Issue.dispatch :<>= dispatch.alu(0)
   alu1Issue.dispatch :<>= dispatch.alu(1)
