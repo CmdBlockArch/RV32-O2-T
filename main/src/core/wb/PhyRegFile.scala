@@ -66,7 +66,9 @@ class PhyRegFile extends Module {
   for (i <- 0 until wbWidth) {
     for (j <- 0 until wbWidth) {
       if (i != j) {
-        val wConflict = write(i).en && write(j).en && write(i).rd === write(j).rd
+        val wConflict = write(i).en && write(i).rd.orR &&
+                        write(j).en && write(j).rd.orR &&
+                        write(i).rd === write(j).rd
         assert(!wConflict)
       }
     }
