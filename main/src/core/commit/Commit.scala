@@ -10,6 +10,8 @@ import utils._
 import utils.Debug._
 
 class Commit extends Module {
+  import Commit._
+
   val rob = IO(new ReorderBuffer.CommitIO)
   val prfFree = IO(Output(Vec(commitWidth, UInt(prfW.W))))
   val prfWrite = IO(new PhyRegFile.WriteIO)
@@ -130,7 +132,7 @@ class Commit extends Module {
   }
   when (arbRead.resp) {
     state := stHold
-    rdVal := arbRead.data
+    rdVal := getLoadVal(mem, addr, arbRead.data)
   }
   when (arbWrite.dataReady) { dataValid := false.B }
   when (arbWrite.resp) { state := stHold }
@@ -176,5 +178,14 @@ class Commit extends Module {
 object Commit {
   object State extends ChiselEnum {
     val stIdle, stRead, stWrite, stHold, stJmp = Value
+  }
+
+  def getLoadVal(mem: UInt, addr: UInt, old: UInt): UInt = {
+    val offset = Cat(addr(1, 0), 0.U(3.W))
+    val rdata = Wire(UInt(32.W)); rdata := old >> offset
+    Mux(mem(1), rdata, Mux(mem(0), // amo操作码刚好对应lw，且地址一定对齐
+      Cat(Fill(16, rdata(15) && mem(2)), rdata(15, 0)), // 01
+      Cat(Fill(24, rdata( 7) && mem(2)), rdata( 7, 0)), // 00
+    ))
   }
 }
