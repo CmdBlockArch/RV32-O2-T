@@ -62,8 +62,8 @@ class PhyRegFile extends Module {
     })
   }
 
-  // 寄存器写入冲突检测
-  for (i <- 0 until wbWidth) {
+  // 寄存器写入冲突检测，在推测执行到非法指令时可能会触发，但最终会被冲刷
+  /* for (i <- 0 until wbWidth) {
     for (j <- 0 until wbWidth) {
       if (i != j) {
         val wConflict = write(i).en && write(i).rd.orR &&
@@ -72,7 +72,7 @@ class PhyRegFile extends Module {
         assert(!wConflict)
       }
     }
-  }
+  } */
 
   // debug
   val dbgOut = DebugIO(new Bundle {

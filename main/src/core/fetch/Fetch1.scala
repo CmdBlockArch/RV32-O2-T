@@ -73,12 +73,12 @@ class Fetch1 extends Module {
     }
   }
 
-  // fence.i发生后会冲刷流水线。在冲刷前开始的请求不能写入元数据
+  // fence.i发生后会冲刷流水线。在冲刷前开始的请求不能写入icache
   metaWrite.en := valid && memReader.io.resp
   metaWrite.index := index
   metaWrite.way := evictWay
   metaWrite.data.tag := tag
-  dataWrite.en := memReader.io.resp
+  dataWrite.en := valid && memReader.io.resp
   dataWrite.index := index
   dataWrite.way := evictWay
   dataWrite.data := memReader.io.data
