@@ -32,11 +32,15 @@ class OooResvStation[T <: Data](entryN: Int, payload: => T)
   }
 
   // 移动唤醒后的保留站表项
-  for (i <- 0 until entryN - 1) {
-    when (out.fire && ready.take(i + 1).reduce(_ || _)) {
-      rs(i) := rsWaken(i + 1)
-    } .otherwise {
+  for (i <- 0 until entryN) {
+    if (i == entryN - 1) {
       rs(i) := rsWaken(i)
+    } else {
+      when (out.fire && ready.take(i + 1).reduce(_ || _)) {
+        rs(i) := rsWaken(i + 1)
+      } .otherwise {
+        rs(i) := rsWaken(i)
+      }
     }
   }
 
