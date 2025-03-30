@@ -65,6 +65,11 @@ class Top extends Module {
   val commit = Module(new core.commit.Commit)
 
   // ---------- 连线 ----------
+  // 公用模块
+  prf.prfFree := commit.prfFree
+  prf.io.flush := redirect
+  prf.io.commitRat := commit.io.rat
+
   // fetch
   axiReadArb.master(0) :<>= fetch.arbRead
   decode.in :<>= fetch.out
