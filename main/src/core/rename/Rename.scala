@@ -21,7 +21,7 @@ class Rename extends PiplineModule(new Decode.OutBundle, new Rename.OutBundle) {
 
   // Register Alias Table
   val rat = RegInit(VecInit(Seq.fill(32)(0.U(prfW.W))))
-  // 需要保证x0始终映射到0号物理寄存器。该物理寄存器值恒为0
+  assert(rat(0.U) === 0.U) // 需要保证x0始终映射到0号物理寄存器。该物理寄存器值恒为0
 
   // Free List
   val freeList = RegInit(VecInit((0 until prfN).map(_.U(prfW.W))))

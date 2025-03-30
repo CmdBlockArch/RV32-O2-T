@@ -71,24 +71,30 @@ class Commit extends Module {
     }
   }
 
-  // ---------- 重命名维护 ----------
+  // ---------- 重命名状态维护 ----------
   val rat = RegInit(VecInit(Seq.fill(32)(0.U(prfW.W))))
   assert(rat(0.U) === 0.U)
 
-  // 更新确定状态的RAT
-  when (idle) {
-    for (i <- 0 until commitWidth) {
-      when (valid(i) && entry(i).dp.arfRd =/= 0.U) {
-        assert(entry(i).dp.prfRd =/= 0.U)
-        rat(entry(i).dp.arfRd) := entry(i).dp.prfRd
-      }
-    }
-  }
+  var ratBefore = WireDefault(rat)
+  for (i <- 0 until commitWidth) {
+    val ratAfter = WireDefault(ratBefore)
 
-  // 释放物理寄存器
-  prfFree := valid.zip(entry).map{ case (v, e) =>
-    Mux(idle && v, rat(e.dp.arfRd), 0.U)
+    val doEn = idle && valid(i)
+    val arfRd = entry(i).dp.arfRd
+    val prfRd = entry(i).dp.prfRd
+
+    // 更新确定状态RAT
+    when (doEn && arfRd =/= 0.U) {
+      assert(prfRd =/= 0.U)
+      ratAfter(arfRd) := prfRd
+    }
+
+    // 释放物理寄存器
+    prfFree(i) := Mux(doEn, ratBefore(arfRd), 0.U)
+
+    ratBefore = ratAfter
   }
+  rat := ratBefore
 
   // ---------- 状态机 ----------
   when (hold) {
