@@ -63,15 +63,18 @@ class Rename extends PiplineModule(new Decode.OutBundle, new Rename.OutBundle) {
   }
 
   // ---------- 物理寄存器释放 ----------
-  val freeCnt = prfFree.count(_ =/= 0.U)
+  val prfFreeR = RegNext(prfFree, 0.U.asTypeOf(prfFree))
+
+  val freeValid = VecInit(prfFreeR.map(_.orR))
+  val freeCnt = freeValid.count(_.asBool)
   enqPtr := enqPtr + freeCnt
 
   assert(commitWidth == 2)
-  when (freeCnt.orR) {
-    freeList(enqPtr) := Mux(prfFree(0).orR, prfFree(0), prfFree(1))
+  when (freeValid.reduce(_ || _)) {
+    freeList(enqPtr) := Mux(freeValid(0), prfFreeR(0), prfFreeR(1))
   }
-  when (freeCnt(1)) { // freeCnt === 2.U
-    freeList(enqPtr + 1.U) := prfFree(1)
+  when (freeValid.reduce(_ && _)) { // freeCnt === 2.U
+    freeList(enqPtr + 1.U) := prfFreeR(1)
   }
 
   when (out.fire) {
@@ -82,11 +85,16 @@ class Rename extends PiplineModule(new Decode.OutBundle, new Rename.OutBundle) {
 
   // ---------- 分支预测失败恢复 ----------
   val commitRatAllocCnt = commitRat.count(_.orR)
-  when (flush) {
+  when (RegNext(flush, false.B)) {
     rat := commitRat
     deqPtr := enqPtr + commitRatAllocCnt + 1.U
     count := (prfN - 1).U - commitRatAllocCnt
   }
+
+  /* 出于时序考虑，将物理寄存器释放和分支预测失败恢复延后一个周期。
+  分支预测失败后，整个前端都会全部冲刷，后端更年轻的全部指令也都会冲刷，所以正确性不会受影响。
+  这里确定状态的RAT没有用寄存器缓存，这是因为冲刷后commitRAT不会马上更新
+  直到重新取指的下一条指令提交时，commitRAT才有可能会被更新，所以无需缓存 */
 }
 
 object Rename {
